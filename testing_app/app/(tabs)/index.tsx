@@ -6,13 +6,14 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const [ticker, setTicker] = useState('');
   const [selectedIndicator, setSelectedIndicator] = useState('RSI');
   const [selectedEquality, setEquality] = useState('>');
   const [value, setValue] = useState('');
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!ticker || !value) {
       Alert.alert("Missing Info", "Please fill in all fields before submitting.");
       return;
@@ -20,8 +21,24 @@ export default function HomeScreen() {
   
     const notifierSummary = `${ticker} ${selectedEquality} ${value} (${selectedIndicator})`;
   
-    // For now, just alert it — you could also save it to state, AsyncStorage, or send it somewhere
-    Alert.alert("Notifier Saved", notifierSummary);
+    try {
+      const existingData = await AsyncStorage.getItem('@notifiers');
+      const notifiers = existingData ? JSON.parse(existingData) : [];
+  
+      notifiers.push({
+        ticker,
+        selectedIndicator,
+        selectedEquality,
+        value,
+        createdAt: new Date().toISOString(),
+      });
+  
+      await AsyncStorage.setItem('@notifiers', JSON.stringify(notifiers));
+      Alert.alert("Notifier Saved", notifierSummary);
+    } catch (error) {
+      Alert.alert("Error", "Failed to save notifier.");
+      console.error("Storage error:", error);
+    }
   };
 
   return (
