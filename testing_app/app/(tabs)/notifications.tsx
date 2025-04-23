@@ -28,6 +28,17 @@ export default function TabTwoScreen() {
     }
   };
 
+  const deleteNotifier = async (indexToDelete: number) => {
+    try {
+      const updatedNotifiers = [...notifiers];
+      updatedNotifiers.splice(indexToDelete, 1);
+      setNotifiers(updatedNotifiers);
+      await AsyncStorage.setItem('@notifiers', JSON.stringify(updatedNotifiers));
+    } catch (e) {
+      console.log('Error deleting notifier:', e);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       const fetchNotifiers = async () => {
@@ -63,6 +74,9 @@ export default function TabTwoScreen() {
               <Text style={styles.ticker}>{item.ticker}</Text>
               <Text>{item.selectedIndicator} {item.selectedEquality} {item.value}</Text>
               <Text style={styles.date}>Saved: {new Date(item.createdAt).toLocaleString()}</Text>
+              <Text style={styles.deleteButton} onPress={() => deleteNotifier(index)}>
+                Delete
+              </Text>
             </View>
           ))
         )}
@@ -113,5 +127,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#d00',
     textAlign: 'center',
+  },
+  deleteButton: {
+    marginTop: 8,
+    color: '#d00',
+    fontWeight: 'bold',
   },
 });

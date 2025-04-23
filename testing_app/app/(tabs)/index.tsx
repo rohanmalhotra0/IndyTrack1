@@ -13,6 +13,18 @@ export default function HomeScreen() {
   const [selectedIndicator, setSelectedIndicator] = useState('RSI');
   const [selectedEquality, setEquality] = useState('>');
   const [value, setValue] = useState('');
+
+  const sendToServer = async () => {
+    const data = await AsyncStorage.getItem('@notifiers');
+    if (data) {
+      await fetch('http://<your-server>/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: data,
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!ticker || !value) {
       Alert.alert("Missing Info", "Please fill in all fields before submitting.");
