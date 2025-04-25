@@ -2,6 +2,9 @@ import json
 import os
 import time
 
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 # We asume the JSON file named "alerts.json".
 json_file = os.path.join(os.path.dirname(__file__), "alerts.json")
 
@@ -24,7 +27,11 @@ def main():
 
         # Work with data here.
         for i, alert in enumerate(alerts):
-            print(f"Alerta #{i+1}: {alert}")
+            print(f"Alert #{i+1}: {alert}")
+            data = request.get_json();
+            
+            # Print the data received from the request
+            print(f"Data received: {data}")
 
         # 120 seconds delay
         time.sleep(120)
