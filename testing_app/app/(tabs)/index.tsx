@@ -7,6 +7,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function HomeScreen() {
   const [ticker, setTicker] = useState('');
@@ -14,14 +15,27 @@ export default function HomeScreen() {
   const [selectedEquality, setEquality] = useState('>');
   const [value, setValue] = useState('');
 
-  const sendToServer = async () => {
-    const data = await AsyncStorage.getItem('@notifiers');
-    if (data) {
-      await fetch('http://<your-server>/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: data,
-      });
+  const exportNotifiers = async () => {
+    try {
+      const existingData = await AsyncStorage.getItem('@notifiers');
+  
+      // Handle the case where existingData might be null
+      const dataToSend = existingData ? JSON.parse(existingData) : []; // Default to an empty array if null
+  
+      const res = await axios.post(
+        'http://localhost:5000/process-data', 
+        dataToSend, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      setValue(res.data.status);  // Response from the server
+    } catch (error) {
+      console.error('Error sending data', error);
+      setValue('Error sending data');
     }
   };
 
@@ -47,6 +61,7 @@ export default function HomeScreen() {
   
       await AsyncStorage.setItem('@notifiers', JSON.stringify(notifiers));
       Alert.alert("Notifier Saved", notifierSummary);
+      exportNotifiers();
     } catch (error) {
       Alert.alert("Error", "Failed to save notifier.");
       console.error("Storage error:", error);
