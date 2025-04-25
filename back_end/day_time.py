@@ -12,10 +12,10 @@ def read_alerts(path):
             print(f"Data was read from {len(data)}.")
             return data
     except FileNotFoundError:
-        print("❌ File not found.")
+        print("File not found.")
         return []
     except json.JSONDecodeError as e:
-        print(f"❌ Error while decoding JSON: {e}")
+        print(f"Error while decoding JSON: {e}")
         return []
 
 def main():
