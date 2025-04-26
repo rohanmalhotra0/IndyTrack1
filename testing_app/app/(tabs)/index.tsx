@@ -8,23 +8,37 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import uuid from 'react-native-uuid';
+const USER_ID_KEY = '@user_id';
 
 export default function HomeScreen() {
   const [ticker, setTicker] = useState('');
   const [selectedIndicator, setSelectedIndicator] = useState('RSI');
   const [selectedEquality, setEquality] = useState('>');
   const [value, setValue] = useState('');
+  
+  const getOrCreateUserId = async (): Promise<string> => {
+    let userId = await AsyncStorage.getItem(USER_ID_KEY);
+    if (!userId) {
+      userId = uuid.v4().toString();
+      await AsyncStorage.setItem(USER_ID_KEY, userId);
+    }
+    return userId;
+  };
 
   const exportNotifiers = async () => {
     try {
       const existingData = await AsyncStorage.getItem('@notifiers');
+      const userId = await getOrCreateUserId();
   
-      // Handle the case where existingData might be null
-      const dataToSend = existingData ? JSON.parse(existingData) : []; // Default to an empty array if null
+      const dataToSend = {
+        userId,
+        notifiers: existingData ? JSON.parse(existingData) : [],
+      };
   
       const res = await axios.post(
-        'http://localhost:5000/process-data', 
-        dataToSend, 
+        'http://localhost:5000/process-data',
+        dataToSend,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -32,7 +46,7 @@ export default function HomeScreen() {
         }
       );
   
-      setValue(res.data.status);  // Response from the server
+      setValue(res.data.status);
     } catch (error) {
       console.error('Error sending data', error);
       setValue('Error sending data');
