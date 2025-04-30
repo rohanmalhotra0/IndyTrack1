@@ -7,6 +7,8 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
+import * as Permissions from 'expo-permissions';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
 const USER_ID_KEY = '@user_id';
@@ -16,6 +18,25 @@ export default function HomeScreen() {
   const [selectedIndicator, setSelectedIndicator] = useState('RSI');
   const [selectedEquality, setEquality] = useState('>');
   const [value, setValue] = useState('');
+
+  const registerForPushNotificationsAsync = async () => {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+  
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+  
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for notifications!');
+      return;
+    }
+  
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log('Push Token:', token);
+    return token;
+  };
   
   const getOrCreateUserId = async (): Promise<string> => {
     let userId = await AsyncStorage.getItem(USER_ID_KEY);
@@ -118,7 +139,7 @@ export default function HomeScreen() {
         </Picker>
         <Text>Selected: {selectedIndicator}</Text>
 
-        <ThemedText type="subtitle">Select realtionship</ThemedText>
+        <ThemedText type="subtitle">Select relationship</ThemedText>
         <Picker
           selectedValue={selectedEquality}
           onValueChange={(itemValue) => setEquality(itemValue)}

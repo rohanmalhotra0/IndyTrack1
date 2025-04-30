@@ -7,6 +7,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import axios from 'axios';
+import uuid from 'react-native-uuid';
+const USER_ID_KEY = '@user_id';
 
 type Notifier = {
   ticker: string;
@@ -18,6 +21,44 @@ type Notifier = {
 
 export default function TabTwoScreen() {
   const [notifiers, setNotifiers] = useState<Notifier[]>([]);
+  const [value, setValue] = useState('');
+
+  const getOrCreateUserId = async (): Promise<string> => {
+    let userId = await AsyncStorage.getItem(USER_ID_KEY);
+    if (!userId) {
+      userId = uuid.v4().toString();
+      await AsyncStorage.setItem(USER_ID_KEY, userId);
+    }
+    return userId;
+  };
+  
+  
+  const exportNotifiers = async () => {
+    try {
+      const existingData = await AsyncStorage.getItem('@notifiers');
+      const userId = await getOrCreateUserId();
+  
+      const dataToSend = {
+        userId,
+        notifiers: existingData ? JSON.parse(existingData) : [],
+      };
+  
+      const res = await axios.post(
+        'http://localhost:5000/process-data',
+        dataToSend,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      setValue(res.data.status);
+    } catch (error) {
+      console.error('Error sending data', error);
+      setValue('Error sending data');
+    }
+  };
 
   const clearNotifiers = async () => {
     try {
@@ -26,6 +67,7 @@ export default function TabTwoScreen() {
     } catch (e) {
       console.log('Error clearing AsyncStorage:', e);
     }
+    exportNotifiers();
   };
 
   const deleteNotifier = async (indexToDelete: number) => {
@@ -37,6 +79,7 @@ export default function TabTwoScreen() {
     } catch (e) {
       console.log('Error deleting notifier:', e);
     }
+    exportNotifiers();
   };
 
   useFocusEffect(
